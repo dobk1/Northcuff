@@ -79,7 +79,7 @@ skinStopBtn.MouseButton1Click:Connect(function()
 	running = false
 end)
 
--- سكربت الكلبشة الذكية (تلامس حقيقي + نقل بعيد + يبين يم اللاعبين)
+-- سكربت الكلبشة الذكية (firetouchinterest لتفعيل رسمي)
 local clamping = false
 arrestStartBtn.MouseButton1Click:Connect(function()
 	if clamping then return end
@@ -98,9 +98,15 @@ arrestStartBtn.MouseButton1Click:Connect(function()
 					if player ~= LocalPlayer and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
 						local targetHRP = player.Character.HumanoidRootPart
 						myHRP.CFrame = targetHRP.CFrame * CFrame.new(0, 0, 0.5)
-						wait(0.2)
-						tool:Activate()
-						wait(0.4)
+						wait(0.15)
+						pcall(function()
+							firetouchinterest(tool.Handle, targetHRP, 0)
+							wait(0.1)
+							tool:Activate()
+							wait(0.1)
+							firetouchinterest(tool.Handle, targetHRP, 1)
+						end)
+						wait(0.3)
 						player.Character:MoveTo(farPos)
 						wait(0.6)
 					end
