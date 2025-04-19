@@ -1,56 +1,139 @@
--- GUI لموبايل أندرويد، زر واحد يكلبش اللاعبين ويرميهم بعيد
-
-local player = game.Players.LocalPlayer
+-- واجهة GUI كاملة للموبايل (Delta Android) + زر إظهار/إخفاء
 
 local gui = Instance.new("ScreenGui", game.CoreGui)
-gui.Name = "CuffAllGUI"
+gui.Name = "LeviAndroidGui"
 
--- زر واجهة
-local btn = Instance.new("TextButton", gui)
-btn.Size = UDim2.new(0, 200, 0, 50)
-btn.Position = UDim2.new(0, 10, 0, 100)
-btn.Text = "كلبش الكل + طيرهم"
-btn.BackgroundColor3 = Color3.fromRGB(255, 85, 0)
-btn.TextColor3 = Color3.fromRGB(255, 255, 255)
-btn.Font = Enum.Font.SourceSansBold
-btn.TextScaled = true
-btn.BorderSizePixel = 0
+-- زر جانبي للإظهار/الإخفاء
+local toggleBtn = Instance.new("TextButton", gui)
+toggleBtn.Size = UDim2.new(0, 60, 0, 30)
+toggleBtn.Position = UDim2.new(0, 10, 0, 10)
+toggleBtn.Text = "≡"
+toggleBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+toggleBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+toggleBtn.BorderSizePixel = 0
 
-btn.MouseButton1Click:Connect(function()
-    local character = player.Character or player.CharacterAdded:Wait()
-    local tool = character:FindFirstChildOfClass("Tool") or player.Backpack:FindFirstChildOfClass("Tool")
+-- الإطار الرئيسي
+local frame = Instance.new("ScrollingFrame", gui)
+frame.Size = UDim2.new(0, 270, 0, 260)
+frame.Position = UDim2.new(0, 10, 0, 50)
+frame.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+frame.BorderSizePixel = 0
+frame.Visible = true
+frame.CanvasSize = UDim2.new(0, 0, 0, 400)
+frame.ScrollBarThickness = 6
 
-    if not tool then
-        warn("ماكو أداة كلبشة بيدك!")
-        btn.Text = "ماكو كلبشة!"
-        return
-    end
+-- الأزرار
+local function createButton(text, yPosition, color)
+	local btn = Instance.new("TextButton", frame)
+	btn.Size = UDim2.new(0, 240, 0, 40)
+	btn.Position = UDim2.new(0, 15, 0, yPosition)
+	btn.Text = text
+	btn.BackgroundColor3 = color
+	btn.TextColor3 = Color3.fromRGB(255, 255, 255)
+	btn.Font = Enum.Font.SourceSansBold
+	btn.TextScaled = true
+	btn.BorderSizePixel = 0
+	return btn
+end
 
-    local remote = tool:FindFirstChild("CuffPlayer") or tool:FindFirstChild("RemoteEvent") or tool:FindFirstChildWhichIsA("RemoteEvent")
+local skinStartBtn = createButton("تشغيل السكن", 20, Color3.fromRGB(255, 140, 0))
+local skinStopBtn = createButton("ايقاف السكن", 70, Color3.fromRGB(100, 60, 0))
+local arrestStartBtn = createButton("تشغيل الكلبشة الذكية", 130, Color3.fromRGB(0, 153, 255))
+local arrestStopBtn = createButton("ايقاف الكلبشة", 180, Color3.fromRGB(0, 70, 120))
+local rajdiBtn = createButton("💀 راجدي جماعي", 230, Color3.fromRGB(180, 0, 0))
 
-    if not remote then
-        warn("ما لقيت RemoteEvent داخل الكلبشة.")
-        btn.Text = "ماكو Remote!"
-        return
-    end
+-- الحقوق
+local credit = Instance.new("TextLabel", frame)
+credit.Size = UDim2.new(1, 0, 0, 20)
+credit.Position = UDim2.new(0, 0, 0, 280)
+credit.Text = "حقوق: iraq north dobk"
+credit.BackgroundTransparency = 1
+credit.TextColor3 = Color3.fromRGB(255, 255, 255)
+credit.TextScaled = true
+credit.Font = Enum.Font.SourceSans
 
-    btn.Text = "جاري الكلبشة..."
+-- زر الإخفاء/الإظهار
+toggleBtn.MouseButton1Click:Connect(function()
+	frame.Visible = not frame.Visible
+end)
 
-    for _, target in pairs(game.Players:GetPlayers()) do
-        if target ~= player and target.Character and target.Character:FindFirstChild("HumanoidRootPart") then
-            -- كلبشة (إذا مسموح)
-            pcall(function()
-                remote:FireServer(target.Character)
-            end)
+-- سكربت السكن (مع أوامر HD Admin مخفية)
+local running = false
+local skinList = {"coolkid", "johnDoe", "noob", "builderman", "guest", "ghost", "admin", "zombie", "bacon"}
+local cooldown = 2
+local hd = game.ReplicatedStorage:FindFirstChild("HDAdminClient")
 
-            -- رمي اللاعب فوق
-            pcall(function()
-                target.Character.HumanoidRootPart.CFrame = CFrame.new(0, 1000, 0)
-            end)
+skinStartBtn.MouseButton1Click:Connect(function()
+	if running or not hd then return end
+	running = true
+	coroutine.wrap(function()
+		while running do
+			local skin = skinList[math.random(1, #skinList)]
+			hd.Event:FireServer("Command", "/e ;char me " .. skin)
+			wait(cooldown)
+		end
+	end)()
+end)
 
-            wait(1.2)
-        end
-    end
+skinStopBtn.MouseButton1Click:Connect(function()
+	running = false
+end)
 
-    btn.Text = "اكتملت الكلبشة!"
+-- سكربت الكلبشة الذكية (محدث مع ضغط أرجل)
+local clamping = false
+arrestStartBtn.MouseButton1Click:Connect(function()
+	if clamping then return end
+	clamping = true
+
+	local Players = game:GetService("Players")
+	local LocalPlayer = Players.LocalPlayer
+	local farPos = Vector3.new(999999, 999999, 999999)
+	local myHRP = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+
+	spawn(function()
+		while clamping do
+			for _, target in pairs(Players:GetPlayers()) do
+				if target ~= LocalPlayer and target.Character and target.Character:FindFirstChild("HumanoidRootPart") then
+					local targetHRP = target.Character.HumanoidRootPart
+					if myHRP then
+						myHRP.CFrame = targetHRP.CFrame * CFrame.new(0, -2.5, 0)
+						wait(0.25)
+						myHRP.CFrame = CFrame.new(farPos)
+						wait(0.25)
+					end
+				end
+			end
+		end
+	end)
+end)
+
+arrestStopBtn.MouseButton1Click:Connect(function()
+	clamping = false
+end)
+
+-- سكربت راجدي جماعي
+rajdiBtn.MouseButton1Click:Connect(function()
+	local Players = game:GetService("Players")
+	local LocalPlayer = Players.LocalPlayer
+	local myHRP = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+	if not myHRP then
+		warn("❌ ما لكيت HumanoidRootPart مالك!")
+		return
+	end
+
+	for _, player in pairs(Players:GetPlayers()) do
+		if player ~= LocalPlayer and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+			local targetHRP = player.Character:WaitForChild("HumanoidRootPart")
+			local startTime = tick()
+			while tick() - startTime < 4 do
+				local behind = targetHRP.CFrame * CFrame.new(0, 0, -2)
+				myHRP.CFrame = CFrame.new(behind.Position, targetHRP.Position)
+				local tool = LocalPlayer.Character:FindFirstChildOfClass("Tool")
+				if tool then
+					tool:Activate()
+				end
+				wait(0.4)
+			end
+		end
+	end
 end)
